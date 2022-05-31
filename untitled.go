@@ -3,42 +3,36 @@ package main
 import "fmt"
 
 /*
-Panic and Recover
+Pointer Dereference
 
-Go doesn't support exception throwing and catching, instead explicit error handling is preferred to use in Go
-programming. In fact, Go supports an exception throw/catch alike mechanism. The mechanism is called panic/recover.
+Given a pointer value p of a pointer type whose base type is T, how can you get the value at the address stored in the
+pointer (a.k.a., the value being referenced by the pointer)? Just use the expression *p, where * is called dereference
+operator. *p is called the dereference of pointer p. Pointer dereference is the inverse process of address taking.
+The result of *p is a value of type T (the base type of the type of p).
 
-We can call the built-in panic function to create a panic to make the current goroutine enter panicking status.
-
-Panicking is another way to make a function return. Once a panic occurs in a function call, the function call returns
-immediately and enters its exiting phase.
-
-By calling the built-in recover function in a deferred call, an alive panic in the current goroutine can be removed so
-that the current goroutine will enter normal calm status again.
-
-If a panicking goroutine exits without being recovered, it will make the whole program crash.
-The built-in panic and recover functions are declared as:
-
-func panic(v interface{})
-func recover() interface{}
-
-Interface types and values will be explained in the article interfaces in Go later. Here, we just need to know that the
-blank interface type interface{} can be viewed as the "Any" type or the Object type in many other languages. In other
-words, we can pass a value of any type to a panic function call.
-
-The value returned by a recover function call is the value a panic function call consumed.
-The example below shows how to create a panic and how to recover from it.
+Dereferencing a nil pointer causes a runtime panic.
+The following program shows some address taking and pointer dereference examples:
 */
 
 func main() {
-	defer func() {
-		fmt.Println("exit normally.")
-	}()
-	fmt.Println("hi!")
-	defer func() {
-		v := recover()
-		fmt.Println("recovered:", v)
-	}()
-	panic("bye!")
-	fmt.Println("unreachable")
+	p0 := new(int)   // p0 points to a zero int value.
+	fmt.Println(p0)  // (a hex address string)
+	fmt.Println(*p0) // 0
+
+	// x is a copy of the value at
+	// the address stored in p0.
+	x := *p0
+	// Both take the address of x.
+	// x, *p1 and *p2 represent the same value.
+	p1, p2 := &x, &x
+	fmt.Println(p1 == p2) // true
+	fmt.Println(p0 == p1) // false
+	p3 := &*p0            // <=> p3 := &(*p0) <=> p3 := p0
+	// Now, p3 and p0 store the same address.
+	fmt.Println(p0 == p3) // true
+	*p0, *p1 = 123, 789
+	fmt.Println(*p2, x, *p3) // 789 789 123
+
+	fmt.Printf("%T, %T \n", *p0, x) // int, int
+	fmt.Printf("%T, %T \n", p0, p1) // *int, *int
 }
