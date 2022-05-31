@@ -1,38 +1,62 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 /*
-Pointer Dereference
+Struct Value Literals and Struct Value Manipulations
 
-Given a pointer value p of a pointer type whose base type is T, how can you get the value at the address stored in the
-pointer (a.k.a., the value being referenced by the pointer)? Just use the expression *p, where * is called dereference
-operator. *p is called the dereference of pointer p. Pointer dereference is the inverse process of address taking.
-The result of *p is a value of type T (the base type of the type of p).
+In Go, the form T{...}, where T must be a type literal or a type name, is called a composite literal and is used as the
+value literals of some kinds of types, including struct types and the container types introduced later.
 
-Dereferencing a nil pointer causes a runtime panic.
-The following program shows some address taking and pointer dereference examples:
+Note, a type literal T{...} is a typed value, its type is T.
+Given a struct type S whose underlying type is struct{x int; y bool}, the zero value of S can be represented by the
+following two variants of struct composite literal forms:
+
+    S{0, false}. In this variant, no field names are present but all field values must be present by the field
+declaration orders.
+    S{x: 0, y: false}, S{y: false, x: 0}, S{x: 0}, S{y: false} and S{}. In this variant, each field item is optional
+and the order of the field items is not important. The values of the absent fields will be set as the zero values of
+their respective types. But if a field item is present, it must be presented with the FieldName: FieldValue form. The
+order of the field items in this form doesn't matter. The form S{} is the most used zero value representation of type S.
+
+If S is a struct type imported from another package, it is recommended to use the second form, to maintain
+compatibility. Consider the case where the maintainer of the package adds a new field for type S, this will make the
+use of first form invalid.
+
+Surely, we can also use the struct composite literals to represent non-zero struct value.
+
+For a value v of type S, we can use v.x and v.y, which are called selectors (or selector expressions), to represent the
+field values of v. v is called the receiver of the selectors. Later, we call the dot . in a selector as the property
+selection operator.
+An example:
 */
 
+type Book struct {
+	title, author string
+	pages         int
+}
+
 func main() {
-	p0 := new(int)   // p0 points to a zero int value.
-	fmt.Println(p0)  // (a hex address string)
-	fmt.Println(*p0) // 0
+	book := Book{"Go 101", "Tapir", 256}
+	fmt.Println(book) // {Go 101 Tapir 256}
 
-	// x is a copy of the value at
-	// the address stored in p0.
-	x := *p0
-	// Both take the address of x.
-	// x, *p1 and *p2 represent the same value.
-	p1, p2 := &x, &x
-	fmt.Println(p1 == p2) // true
-	fmt.Println(p0 == p1) // false
-	p3 := &*p0            // <=> p3 := &(*p0) <=> p3 := p0
-	// Now, p3 and p0 store the same address.
-	fmt.Println(p0 == p3) // true
-	*p0, *p1 = 123, 789
-	fmt.Println(*p2, x, *p3) // 789 789 123
+	// Create a book value with another form.
+	// All of the three fields are specified.
+	book = Book{author: "Tapir", pages: 256, title: "Go 101"}
 
-	fmt.Printf("%T, %T \n", *p0, x) // int, int
-	fmt.Printf("%T, %T \n", p0, p1) // *int, *int
+	// None of the fields are specified. The title and
+	// author fields are both "", pages field is 0.
+	book = Book{}
+
+	// Only specify the author field. The title field
+	// is "" and the pages field is 0.
+	book = Book{author: "Tapir"}
+
+	// Initialize a struct value by using selectors.
+	var book2 Book // <=> book2 := Book{}
+	book2.author = "Tapir Liu"
+	book2.pages = 300
+	fmt.Println(book2.pages) // 300
 }
