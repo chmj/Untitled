@@ -1,71 +1,44 @@
 package main
 
+import "fmt"
+
 /*
-Concurrency Synchronization
-Concurrent computations may share resources, generally memory resource.
-The following are some circumstances that may occur during concurrent computing:
+Panic and Recover
 
-    In the same period that one computation is writing data to a memory segment,
-	another computation is reading data from the same memory segment.
-	Then the integrity of the data read by the other computation might be not preserved.
-    In the same period that one computation is writing data to a memory segment,
-	another computation is also writing data to the same memory segment.
-	Then the integrity of the data stored at the memory segment might be not preserved.
+Go doesn't support exception throwing and catching, instead explicit error handling is preferred to use in Go
+programming. In fact, Go supports an exception throw/catch alike mechanism. The mechanism is called panic/recover.
 
-These circumstances are called data races.
-One of the duties in concurrent programming is to control resource sharing among concurrent computations,
-so that data races will never happen.
-The ways to implement this duty are called concurrency synchronizations,
-or data synchronizations, which will be introduced one by one in later Go 101 articles.
-Other duties in concurrent programming include
+We can call the built-in panic function to create a panic to make the current goroutine enter panicking status.
 
-    determine how many computations are needed.
-    determine when to start, block, unblock and end a computation.
-    determine how to distribute workload among concurrent computations.
+Panicking is another way to make a function return. Once a panic occurs in a function call, the function call returns
+immediately and enters its exiting phase.
 
-The program shown in the last section is not perfect.
-The two new goroutines are intended to print ten greetings each.
-However, the main goroutine will exit in two seconds, so many greetings don't have a chance to get printed.
-How to let the main goroutine know when the two new goroutines have both finished their tasks?
-We must use something called concurrency synchronization techniques.
+By calling the built-in recover function in a deferred call, an alive panic in the current goroutine can be removed so
+that the current goroutine will enter normal calm status again.
 
-Go supports several concurrency synchronization techniques.
-Among them, the channel technique is the most unique and popularly used one.
-However, for simplicity, here we will use another technique, the WaitGroup type in the sync standard package,
-to synchronize the executions between the two new goroutines and the main goroutine.
-The WaitGroup type has three methods (special functions, will be explained later):
-Add, Done and Wait. This type will be explained in detail later in another article. Here we can simply think
+If a panicking goroutine exits without being recovered, it will make the whole program crash.
+The built-in panic and recover functions are declared as:
 
-    the Add method is used to register the number of new tasks.
-    the Done method is used to notify that a task is finished.
-    and the Wait method makes the caller goroutine become blocking until all registered tasks are finished.
+func panic(v interface{})
+func recover() interface{}
 
-Example:
+Interface types and values will be explained in the article interfaces in Go later. Here, we just need to know that the
+blank interface type interface{} can be viewed as the "Any" type or the Object type in many other languages. In other
+words, we can pass a value of any type to a panic function call.
+
+The value returned by a recover function call is the value a panic function call consumed.
+The example below shows how to create a panic and how to recover from it.
 */
-import (
-	"log"
-	"math/rand"
-	"sync"
-	"time"
-)
-
-var wg sync.WaitGroup
-
-func SayGreetings(greeting string, times int) {
-	for i := 0; i < times; i++ {
-		log.Println(greeting)
-		d := time.Second * time.Duration(rand.Intn(5)) / 2
-		time.Sleep(d)
-	}
-	// Notify a task is finished.
-	wg.Done() // <=> wg.Add(-1)
-}
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-	log.SetFlags(0)
-	wg.Add(2) // register two tasks.
-	go SayGreetings("hi!", 10)
-	go SayGreetings("hello!", 10)
-	wg.Wait() // block until all tasks are finished.
+	defer func() {
+		fmt.Println("exit normally.")
+	}()
+	fmt.Println("hi!")
+	defer func() {
+		v := recover()
+		fmt.Println("recovered:", v)
+	}()
+	panic("bye!")
+	fmt.Println("unreachable")
 }
