@@ -1,29 +1,31 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
-
-/*
- The kicking order after the referee kicks-off the game is random (0_0).
- More like "who gets the ball first" from the referee.
-*/
+import "fmt"
 
 func main() {
-	var ball = make(chan string)
-	kickBall := func(playerName string) {
-		for {
-			fmt.Println(<-ball, "kicked the ball.")
-			time.Sleep(time.Second)
-			ball <- playerName
+	c := make(chan string, 2)
+	trySend := func(v string) {
+		select {
+		case c <- v:
+		default: // go here if c is full.
 		}
 	}
-	go kickBall("John")
-	go kickBall("Alice")
-	go kickBall("Bob")
-	go kickBall("Emily")
-	ball <- "referee" // kick off
-	var c chan bool   // nil
-	<-c               // blocking here forever
+	tryReceive := func() string {
+		select {
+		case v := <-c:
+			return v
+		default:
+			return "-" // go here if c is empty
+		}
+	}
+	trySend("Hello!") // succeed to send
+	trySend("Hi!")    // succeed to send
+	// Fail to send, but will not block.
+	trySend("Bye!")
+	// The following two lines will
+	// both succeed to receive.
+	fmt.Println(tryReceive()) // Hello!
+	fmt.Println(tryReceive()) // Hi!
+	// The following line fails to receive.
+	fmt.Println(tryReceive()) // -
 }
