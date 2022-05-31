@@ -6,31 +6,24 @@ import (
 )
 
 /*
-Some Channel Use Examples
-
-Now that you've read the above section, let's view some examples which use channels to enhance your understanding.
-A simple request/response example. The two goroutines in this example talk to each other through an unbuffered channel.
+ The kicking order after the referee kicks-off the game is random (0_0).
+ More like "who gets the ball first" from the referee.
 */
 
 func main() {
-	c := make(chan int) // an unbuffered channel
-	go func(ch chan<- int, x int) {
-		time.Sleep(time.Second)
-		// <-ch    // fails to compile
-		// Send the value and block until the result is received.
-		ch <- x * x // 9 is sent
-	}(c, 3)
-	done := make(chan struct{})
-	go func(ch <-chan int) {
-		// Block until 9 is received.
-		n := <-ch
-		fmt.Println(n) // 9
-		// ch <- 123   // fails to compile
-		time.Sleep(time.Second)
-		done <- struct{}{}
-	}(c)
-	// Block here until a value is received by
-	// the channel "done".
-	<-done
-	fmt.Println("bye")
+	var ball = make(chan string)
+	kickBall := func(playerName string) {
+		for {
+			fmt.Println(<-ball, "kicked the ball.")
+			time.Sleep(time.Second)
+			ball <- playerName
+		}
+	}
+	go kickBall("John")
+	go kickBall("Alice")
+	go kickBall("Bob")
+	go kickBall("Emily")
+	ball <- "referee" // kick off
+	var c chan bool   // nil
+	<-c               // blocking here forever
 }
