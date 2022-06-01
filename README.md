@@ -1,4 +1,4 @@
-# Untitled: cdvanced go code snipplets
+# Untitled: Advanced go code snipplets
 Code snippets from: https://go101.org/ (Slightly modified)
 
 Usage:
