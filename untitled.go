@@ -15,8 +15,8 @@ import (
  Counting semaphores are often used to enforce a maximum number of concurrent requests.
  Like using channels as mutexes, there are also two manners to acquire one piece of ownership of a channel semaphore.
 
-    Acquire ownership through a send, release through a receive.
-    Acquire ownership through a receive, release through a send.
+    Acquire ownership through send, release through receive.
+    Acquire ownership through receive, release through send.
 
  An example of acquiring ownership through receiving values from a channel.
 */
