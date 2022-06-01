@@ -2,30 +2,28 @@ package main
 
 import "fmt"
 
+type Person struct {
+	Name string
+	Age  int
+}
+
+func (p Person) PrintName() {
+	fmt.Println("Name:", p.Name)
+}
+func (p *Person) SetAge(age int) {
+	p.Age = age
+}
+
+type Singer struct {
+	Person // extends Person by embedding it
+	works  []string
+}
+
 func main() {
-	c := make(chan string, 2)
-	trySend := func(v string) {
-		select {
-		case c <- v:
-		default: // go here if c is full.
-		}
-	}
-	tryReceive := func() string {
-		select {
-		case v := <-c:
-			return v
-		default:
-			return "-" // go here if c is empty
-		}
-	}
-	trySend("Hello!") // succeed to send
-	trySend("Hi!")    // succeed to send
-	// Fail to send, but will not block.
-	trySend("Bye!")
-	// The following two lines will
-	// both succeed to receive.
-	fmt.Println(tryReceive()) // Hello!
-	fmt.Println(tryReceive()) // Hi!
-	// The following line fails to receive.
-	fmt.Println(tryReceive()) // -
+	var gaga = Singer{Person: Person{"Gaga", 30}}
+	gaga.PrintName() // Name: Gaga
+	gaga.Name = "Lady Gaga"
+	(&gaga).SetAge(31)
+	(&gaga).PrintName()   // Name: Lady Gaga
+	fmt.Println(gaga.Age) // 31
 }
