@@ -1,46 +1,56 @@
 package main
 
-import "fmt"
-import "reflect"
+import (
+	"log"
+	"math/rand"
+	"time"
+)
 
-type F func(string, int) bool
+/*
+ Buffered channels can be used as counting semaphores. Counting semaphores can be viewed as multi-owner locks.
+ If the capacity of a channel is N, then it can be viewed as a lock which can have most N owners at any time.
+ Binary semaphores (mutexes) are special counting semaphores, each of binary semaphores can have at most one owner at
+ any time.
 
-func (f F) m(s string) bool {
-	return f(s, 32)
-}
-func (f F) M() {}
+ Counting semaphores are often used to enforce a maximum number of concurrent requests.
+ Like using channels as mutexes, there are also two manners to acquire one piece of ownership of a channel semaphore.
 
-type I interface {
-	m(s string) bool
-	M()
+    Acquire ownership through a send, release through a receive.
+    Acquire ownership through a receive, release through a send.
+
+ An example of acquiring ownership through receiving values from a channel.
+*/
+
+type Seat int
+type Bar chan Seat
+
+func (bar Bar) ServeCustomer(c int) {
+	log.Print("customer#", c, " enters the bar")
+	seat := <-bar // need a seat to drink
+	log.Print("++ customer#", c, " drinks at seat#", seat)
+	time.Sleep(time.Second * time.Duration(2+rand.Intn(6)))
+	log.Print("-- customer#", c, " frees seat#", seat)
+	bar <- seat // free seat and leave the bar
 }
 
 func main() {
-	var x struct {
-		F F
-		i I
+	rand.Seed(time.Now().UnixNano())
+
+	// the bar has 10 seats.
+	bar24x7 := make(Bar, 10)
+	// Place seats in an bar.
+	for seatId := 0; seatId < cap(bar24x7); seatId++ {
+		// None of the sends will block.
+		bar24x7 <- Seat(seatId)
 	}
-	tx := reflect.TypeOf(x)
-	fmt.Println(tx.Kind())        // struct
-	fmt.Println(tx.NumField())    // 2
-	fmt.Println(tx.Field(1).Name) // i
-	// Package path is an intrinsic property of
-	// non-exported selectors (fields or methods).
-	fmt.Println(tx.Field(0).PkgPath) //
-	fmt.Println(tx.Field(1).PkgPath) // main
 
-	tf, ti := tx.Field(0).Type, tx.Field(1).Type
-	fmt.Println(tf.Kind())               // func
-	fmt.Println(tf.IsVariadic())         // false
-	fmt.Println(tf.NumIn(), tf.NumOut()) // 2 1
-	t0, t1, t2 := tf.In(0), tf.In(1), tf.Out(0)
-	// The next line prints: string int bool
-	fmt.Println(t0.Kind(), t1.Kind(), t2.Kind())
+	for customerId := 0; ; customerId++ {
+		time.Sleep(time.Second)
+		go bar24x7.ServeCustomer(customerId)
+	}
 
-	fmt.Println(tf.NumMethod(), ti.NumMethod()) // 1 2
-	fmt.Println(tf.Method(0).Name)              // M
-	fmt.Println(ti.Method(1).Name)              // m
-	_, ok1 := tf.MethodByName("m")
-	_, ok2 := ti.MethodByName("m")
-	fmt.Println(ok1, ok2) // false true
+	// sleeping != blocking
+	for {
+		time.Sleep(time.Second)
+	}
 }
