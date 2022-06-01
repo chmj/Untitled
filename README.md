@@ -3,7 +3,7 @@ Code snippets from: https://go101.org/ (Slightly modified)
 
 Usage:
 ```console
-$ git log
+$ git log untitled.go
 
 (check which snipplet you want by commit comment)
 
