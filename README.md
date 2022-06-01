@@ -15,6 +15,6 @@ $ go run untitled.go
 ```
 Think of this as a teaching/coaching aid. 
 
-https://go101.org/ is an awesome resource learning go.
+https://go101.org/ is an awesome resource for learning go.
 
 Have fun! (0_o)
