@@ -13,7 +13,7 @@ $ git checkout <COMMIT_SHA_ID>
 
 $ go run untitled.go
 ```
-Think of this a as teaching/coaching aid. 
+Think of this as a teaching/coaching aid. 
 
 https://go101.org/ is an awesome resource learning go.
 
